@@ -16,7 +16,7 @@ cat table.csv | tblcopy
 Example:
 
 ```sh
-printf 'Name,Amount\nCoffee,4.50\nRent,1200\n' | npm start
+printf 'Name,Amount\nCoffee,4.50\nRent,1200\n' | tblcopy
 ```
 
 The first CSV row is rendered as table headers. Quoted CSV fields, escaped quotes, CRLF line endings, and embedded newlines are supported.
