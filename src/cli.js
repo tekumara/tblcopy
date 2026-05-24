@@ -1,7 +1,10 @@
-export function formatMessage(name = 'tblcopy') {
-  return `${name} is ready.`;
-}
+#!/usr/bin/env node
 
-export function run({ stdout = process.stdout } = {}) {
-  stdout.write(`${formatMessage()}\n`);
+import { run } from "./index.js";
+
+try {
+  await run();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
 }

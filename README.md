@@ -1,29 +1,30 @@
 # tblcopy
 
-A JavaScript project scaffold for `tblcopy`.
+`tblcopy` reads CSV from stdin, converts it to a rich-text table, and copies the RTF table to the macOS clipboard.
 
 ## Requirements
 
 - Node.js 20 or newer
+- macOS, with `textutil` and `osascript` available on `PATH`
 
-## Getting started
+## Usage
+
+```sh
+cat table.csv | tblcopy
+```
+
+Example:
+
+```sh
+printf 'Name,Amount\nCoffee,4.50\nRent,1200\n' | npm start
+```
+
+The first CSV row is rendered as table headers. Quoted CSV fields, escaped quotes, CRLF line endings, and embedded newlines are supported.
+
+## Development
 
 ```sh
 npm install
 npm test
-npm start
-```
-
-## Scripts
-
-- `npm start` — run the CLI entry point
-- `npm test` — run the test suite with Node's built-in test runner
-- `npm run lint` — syntax-check the JavaScript files
-
-## Project layout
-
-```text
-bin/tblcopy.js     CLI entry point
-src/index.js       Application code
-test/index.test.js Tests
+npm start < table.csv
 ```
