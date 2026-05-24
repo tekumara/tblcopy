@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/tekumara/tblcopy/compare/v0.1.1...v0.1.2) (2026-05-24)
+
+
+### Builds
+
+* bump googleapis/release-please-action@v5 ([931d7c0](https://github.com/tekumara/tblcopy/commit/931d7c0ba3c4cd09ae2a70366db12c51d141a226))
+* bump softprops/action-gh-release@v3 ([f48c7d5](https://github.com/tekumara/tblcopy/commit/f48c7d532e5b2b25967f7298681d29d117858b92))
+
 ## [0.1.1](https://github.com/tekumara/tblcopy/compare/v0.1.0...v0.1.1) (2026-05-24)
 
 
