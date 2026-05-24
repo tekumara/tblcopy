@@ -7,7 +7,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { promisify } from "node:util";
 
-import { copyRtf, csvRowsToHtmlTable, parseCsv, run } from "../src/index.js";
+import { copyRtf, csvRowsToHtmlTable, parseCliOptions, parseCsv, run, usage } from "../src/index.js";
 
 const execFile = promisify(execFileCallback);
 
@@ -39,7 +39,7 @@ describe("csvRowsToHtmlTable", () => {
         ["Name", "Note"],
         ["Ada", "<coder> & mathematician"],
       ]),
-      '<!doctype html><html><head><meta charset="utf-8"></head><body><table border="1" cellpadding="4" cellspacing="0"><tr><th>Name</th><th>Note</th></tr><tr><td>Ada</td><td>&lt;coder&gt; &amp; mathematician</td></tr></table></body></html>',
+      '<!doctype html><html><head><meta charset="utf-8"></head><body><table cellpadding="4" cellspacing="0"><tr><th>Name</th><th>Note</th></tr><tr><td>Ada</td><td>&lt;coder&gt; &amp; mathematician</td></tr></table></body></html>',
     );
   });
 
@@ -49,7 +49,14 @@ describe("csvRowsToHtmlTable", () => {
         ["A"],
         ["1", "2"],
       ]),
-      '<!doctype html><html><head><meta charset="utf-8"></head><body><table border="1" cellpadding="4" cellspacing="0"><tr><th>A</th><th></th></tr><tr><td>1</td><td>2</td></tr></table></body></html>',
+      '<!doctype html><html><head><meta charset="utf-8"></head><body><table cellpadding="4" cellspacing="0"><tr><th>A</th><th></th></tr><tr><td>1</td><td>2</td></tr></table></body></html>',
+    );
+  });
+
+  it("adds a table border when requested", () => {
+    assert.equal(
+      csvRowsToHtmlTable([["A"]], { border: true }),
+      '<!doctype html><html><head><meta charset="utf-8"></head><body><table border="1" cellpadding="4" cellspacing="0"><tr><th>A</th></tr></table></body></html>',
     );
   });
 
@@ -108,12 +115,24 @@ describe("copyRtf", () => {
   });
 });
 
+describe("parseCliOptions", () => {
+  it("parses --border", () => {
+    assert.deepEqual(parseCliOptions(["--border"]), { border: true, help: false });
+  });
+
+  it("parses --help", () => {
+    assert.deepEqual(parseCliOptions(["--help"]), { border: false, help: true });
+    assert.deepEqual(parseCliOptions(["-h"]), { border: false, help: true });
+  });
+});
+
 describe("run", () => {
   it("reads CSV from stdin, copies rich text, and reports success", async () => {
     let copiedHtml = "";
     let output = "";
 
     await run({
+      args: [],
       stdin: Readable.from(["Name,Amount\nCoffee,4.50\n"]),
       stdout: {
         write(chunk) {
@@ -128,14 +147,52 @@ describe("run", () => {
     assert.equal(output, "Copied table to clipboard.\n");
     assert.equal(
       copiedHtml,
-      '<!doctype html><html><head><meta charset="utf-8"></head><body><table border="1" cellpadding="4" cellspacing="0"><tr><th>Name</th><th>Amount</th></tr><tr><td>Coffee</td><td>4.50</td></tr></table></body></html>',
+      '<!doctype html><html><head><meta charset="utf-8"></head><body><table cellpadding="4" cellspacing="0"><tr><th>Name</th><th>Amount</th></tr><tr><td>Coffee</td><td>4.50</td></tr></table></body></html>',
     );
+  });
+
+  it("copies a bordered table with --border", async () => {
+    let copiedHtml = "";
+
+    await run({
+      args: ["--border"],
+      stdin: Readable.from(["Name\nAda\n"]),
+      stdout: { write() {} },
+      copyRtf: async (html) => {
+        copiedHtml = html;
+      },
+    });
+
+    assert.equal(
+      copiedHtml,
+      '<!doctype html><html><head><meta charset="utf-8"></head><body><table border="1" cellpadding="4" cellspacing="0"><tr><th>Name</th></tr><tr><td>Ada</td></tr></table></body></html>',
+    );
+  });
+
+  it("prints usage for --help", async () => {
+    let output = "";
+
+    await run({
+      args: ["--help"],
+      stdin: Readable.from([""]),
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+      copyRtf: async () => {
+        throw new Error("copyRtf should not be called for --help");
+      },
+    });
+
+    assert.equal(output, usage());
   });
 
   it("fails when no CSV is provided", async () => {
     await assert.rejects(
       () =>
         run({
+          args: [],
           stdin: Readable.from([""]),
           copyRtf: async () => {},
         }),

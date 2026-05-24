@@ -13,6 +13,12 @@
 cat table.csv | tblcopy
 ```
 
+Add visible table borders with `--border`:
+
+```sh
+cat table.csv | tblcopy --border
+```
+
 Example:
 
 ```sh

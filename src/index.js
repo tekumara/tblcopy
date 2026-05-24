@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { mkdtemp, rm, unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { promisify } from "node:util";
+import { parseArgs, promisify } from "node:util";
 
 const execFile = promisify(execFileCallback);
 
@@ -89,7 +89,7 @@ function htmlEscape(value) {
     .replaceAll(">", "&gt;");
 }
 
-export function csvRowsToHtmlTable(rows) {
+export function csvRowsToHtmlTable(rows, { border = false } = {}) {
   const columnCount = Math.max(0, ...rows.map((row) => row.length));
   const [header = [], ...bodyRows] = rows;
 
@@ -110,9 +110,11 @@ export function csvRowsToHtmlTable(rows) {
     renderedRows.push(renderRow("td", row));
   }
 
+  const borderAttribute = border ? ' border="1"' : "";
+
   return (
     '<!doctype html><html><head><meta charset="utf-8"></head><body>' +
-    `<table border="1" cellpadding="4" cellspacing="0">${renderedRows.join("")}</table>` +
+    `<table${borderAttribute} cellpadding="4" cellspacing="0">${renderedRows.join("")}</table>` +
     "</body></html>"
   );
 }
@@ -153,18 +155,54 @@ export async function copyRtf(
   }
 }
 
+export function usage() {
+  return [
+    "Usage: tblcopy [--border] < input.csv",
+    "",
+    "Reads CSV from stdin, converts it to an RTF table, and copies it to the clipboard.",
+    "",
+    "Options:",
+    "  --border  Include visible table borders",
+    "  -h, --help Show this help",
+    "",
+  ].join("\n");
+}
+
+export function parseCliOptions(args) {
+  const { values } = parseArgs({
+    allowPositionals: false,
+    args,
+    options: {
+      border: { type: "boolean" },
+      help: { short: "h", type: "boolean" },
+    },
+  });
+
+  return {
+    border: values.border === true,
+    help: values.help === true,
+  };
+}
+
 export async function run({
+  args = process.argv.slice(2),
   copyRtf: copyRtfFn = copyRtf,
   stdin = process.stdin,
   stdout = process.stdout,
 } = {}) {
+  const options = parseCliOptions(args);
+  if (options.help) {
+    stdout.write(usage());
+    return;
+  }
+
   const input = await readAll(stdin);
   if (input.trim().length === 0) {
     throw new Error("No CSV input received on stdin.");
   }
 
   const rows = parseCsv(input);
-  const html = csvRowsToHtmlTable(rows);
+  const html = csvRowsToHtmlTable(rows, { border: options.border });
 
   await copyRtfFn(html);
   stdout.write("Copied table to clipboard.\n");
