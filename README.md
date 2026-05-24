@@ -1,11 +1,25 @@
 # tblcopy
 
-`tblcopy` reads CSV from stdin, converts it to a rich-text table, and copies the RTF table to the macOS clipboard.
+`tblcopy` reads CSV from stdin, converts it to a rich-text table, and copies the RTF table to the macOS clipboard. Useful for pasting into spreadsheets, or emails as tables.
 
 ## Requirements
 
 - Node.js 20 or newer
 - macOS, with `textutil` and `osascript` available on `PATH`
+
+## Install
+
+Install globally from npm:
+
+```sh
+npm install -g tblcopy
+```
+
+Or run without installing:
+
+```sh
+npx tblcopy < table.csv
+```
 
 ## Usage
 
