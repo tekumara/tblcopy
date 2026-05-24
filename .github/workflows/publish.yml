@@ -22,7 +22,7 @@ jobs:
       - run: npm ci
       - run: npm publish
       - name: Mark GitHub release as latest (not prerelease)
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name }}
           prerelease: false
